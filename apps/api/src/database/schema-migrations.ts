@@ -29,8 +29,8 @@ import type Database from 'better-sqlite3';
  * 20-25. index files for each area
  */
 export const MIGRATION_FILE_SEQUENCE = [
-  'system/gloabal.sql',
-  'system/system_propmts.sql',
+  'system/global.sql',
+  'system/system_prompts.sql',
   'providers/providers.sql',
   'providers/models.sql',
   'providers/provider_credentials.sql',
@@ -58,8 +58,8 @@ export const MIGRATION_FILE_SEQUENCE = [
 ];
 
 const FALLBACK_SQL: Record<string, string> = {
-  'system/gloabal.sql': `PRAGMA foreign_keys = ON;`,
-  'system/system_propmts.sql': `CREATE TABLE system_prompts (
+  'system/global.sql': `PRAGMA foreign_keys = ON;`,
+  'system/system_prompts.sql': `CREATE TABLE system_prompts (
     id          TEXT PRIMARY KEY,
     name        TEXT NOT NULL,
     content     TEXT NOT NULL,
@@ -282,7 +282,7 @@ export function findDataDir(): string | null {
   for (const candidate of candidates) {
     if (
       existsSync(candidate) &&
-      existsSync(join(candidate, 'system', 'system_propmts.sql'))
+      existsSync(join(candidate, 'system', 'system_prompts.sql'))
     ) {
       return candidate;
     }
