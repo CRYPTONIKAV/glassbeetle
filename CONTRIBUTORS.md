@@ -25,7 +25,7 @@ the `question` label.
 ## Contributors ✨
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Maintained by the [all-contributors](https://allcontributors.org) bot. Emoji
@@ -41,6 +41,7 @@ each one means.
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/nathanschmid08"><img src="https://avatars.githubusercontent.com/u/191041297?v=4?s=100" width="100px;" alt="Nathan Schmid"/><br /><sub><b>Nathan Schmid</b></sub></a><br /><a href="https://github.com/Open-Glassbeetle/glassbeetle/commits?author=nathanschmid08" title="Code">💻</a> <a href="https://github.com/Open-Glassbeetle/glassbeetle/commits?author=nathanschmid08" title="Documentation">📖</a> <a href="#infra-nathanschmid08" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-nathanschmid08" title="Maintenance">🚧</a> <a href="https://github.com/Open-Glassbeetle/glassbeetle/commits?author=nathanschmid08" title="Tests">⚠️</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/jay23606"><img src="https://avatars.githubusercontent.com/u/4602056?v=4?s=100" width="100px;" alt="Jay"/><br /><sub><b>Jay</b></sub></a><br /><a href="https://github.com/Open-Glassbeetle/glassbeetle/commits?author=jay23606" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/O1sumitkumar"><img src="https://avatars.githubusercontent.com/u/109774891?v=4?s=100" width="100px;" alt="Sumeet Jha"/><br /><sub><b>Sumeet Jha</b></sub></a><br /><a href="https://github.com/Open-Glassbeetle/glassbeetle/commits?author=O1sumitkumar" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Doomguy-BFG9000"><img src="https://avatars.githubusercontent.com/u/307901355?v=4?s=100" width="100px;" alt="Doomguy"/><br /><sub><b>Doomguy</b></sub></a><br /><a href="#infra-Doomguy-BFG9000" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
     </tr>
   </tbody>
 </table>
