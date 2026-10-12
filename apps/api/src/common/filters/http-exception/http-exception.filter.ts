@@ -57,7 +57,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = http.getResponse<Response>();
     const request = http.getRequest<Request>();
 
-    const body = this.buildBody(exception, request?.url ?? '');
+    // `originalUrl` keeps the global `api` prefix; `url` is relative to the
+    // mount point and drops it, which would report a path the client never
+    // requested. The not-found fallback and the request logger already read
+    // `originalUrl`, so this keeps the three in agreement.
+    const body = this.buildBody(
+      exception,
+      request?.originalUrl ?? request?.url ?? '',
+    );
 
     const cid = getCorrelationId();
     const cidPrefix = cid ? `[${cid}] ` : '';
