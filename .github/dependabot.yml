@@ -1,0 +1,85 @@
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    # One weekly batch and a five-PR cap keep three workspaces current without
+    # turning the issue tracker into a dependency-update queue.
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+    # The committed lockfile is the update baseline. The npm bundled with
+    # Node 24.2.0 cannot rebuild the Vitest peer graph from scratch, so every
+    # generated lockfile change must still pass `npm ci` on CI's Node 20.19.0.
+    # Avoid changing manifest ranges when the existing range permits an update.
+    versioning-strategy: "increase-if-necessary"
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
+      nestjs:
+        patterns:
+          - "@nestjs/*"
+      tauri-js:
+        patterns:
+          - "@tauri-apps/*"
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+      npm-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Angular 22 does not support the repository's Node.js floor. Keep the
+      # Angular family on 21 until the minimum Node.js version is raised.
+      - dependency-name: "@angular/*"
+        update-types:
+          - "version-update:semver-major"
+
+  - package-ecosystem: "cargo"
+    directory: "/apps/desktop/src-tauri"
+    # Cargo is checked weekly, but no more than two PRs stay open because the
+    # Rust desktop shell is not compiled by CI yet (see issue #109).
+    schedule:
+      interval: "weekly"
+      day: "friday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "chore"
+    groups:
+      cargo-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    # Keep action updates together and stagger them from npm updates.
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
