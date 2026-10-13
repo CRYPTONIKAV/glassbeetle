@@ -40,6 +40,8 @@ The API is the only process that opens the SQLite database — not the frontend,
 not the Rust shell. `data/` holds the schema as executable SQL, applied in the
 order declared in
 [`apps/api/src/database/schema-migrations.ts`](apps/api/src/database/schema-migrations.ts).
+The [documentation index](docs/README.md) points to the project's conventions,
+design records, and proposals.
 
 The three tiers talk to each other like this:
 

@@ -233,11 +233,8 @@ module:
 - [`apps/web/README.md`](apps/web/README.md) — frontend structure, the
   capability probe, and the rule about not inventing data the API cannot back
 
-The rest of `docs/` covers [logging](docs/logging.md),
-[testing](docs/testing.md), [memory tags](docs/memory-tags.md),
-[the realtime transport](docs/realtime-transport.md),
-[the spending budget](docs/spend-budget.md) and
-[the user profile](docs/user-profile.md).
+The [documentation index](docs/README.md) points to the other conventions,
+design records, and proposals, including the semantic-memory RFC.
 
 ## Toolchain surprises worth knowing
 
@@ -347,6 +344,7 @@ apps/api/src/modules/<area>/
 7. **Write the integration test** against the harness.
 8. **Update the docs** if you established or changed a convention, and
    `apps/web/README.md`'s surface table if the frontend can now show something.
+   Add new documents under `docs/` to the [documentation index](docs/README.md).
 
 ## Adding a frontend screen
 
