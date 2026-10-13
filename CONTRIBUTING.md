@@ -62,6 +62,11 @@ Code is one of several, and not the one we are shortest on:
 - **Design work.** Issues labelled [`type:design`][label-design] are RFCs
   looking for a proposal, not an implementation.
 
+Routine dependency updates are opened automatically by Dependabot. Please do
+not open manual version-bump pull requests; reviewing and testing the automated
+pull requests is useful contribution work. Discuss deliberate toolchain or
+major-version migrations in an issue first.
+
 ## Where to start
 
 Three entry points, roughly in order of how much context they need:

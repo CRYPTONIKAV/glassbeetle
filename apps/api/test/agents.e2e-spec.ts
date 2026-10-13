@@ -1,4 +1,6 @@
+import { readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { resolveDefaultDataDir } from '../src/config/data-dir.js';
 import { FileStorageService } from '../src/file-storage/file-storage.service.js';
@@ -1156,6 +1158,8 @@ describe('Agents endpoints (e2e)', () => {
 
     it('rejects a non-image file disguised as image (magic bytes sniffing) with 400', async () => {
       const fileStorage = testApp.app.get(FileStorageService);
+      const picturesDirectory = join(fileStorage.storageRoot, 'pictures');
+      const storedFilesBefore = (await readdir(picturesDirectory)).sort();
       const agent = testApp.fixtures.createAgent({ name: 'Spoofed Agent' });
 
       const textBuffer = Buffer.from('Just some plain text pretending to be PNG');
@@ -1175,6 +1179,9 @@ describe('Agents endpoints (e2e)', () => {
         [agent.id],
       );
       expect(dbRow?.picture_path).toBeNull();
+
+      // Rejected uploads must not leave either a picture or a temporary file.
+      expect((await readdir(picturesDirectory)).sort()).toEqual(storedFilesBefore);
     });
 
     it('rejects an SVG file due to stored-XSS concern with 400', async () => {

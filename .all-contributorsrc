@@ -50,6 +50,15 @@
         "infra",
         "test"
       ]
+    },
+    {
+      "login": "KeuqS",
+      "name": "Aykut Güney",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50778230?v=4",
+      "profile": "https://github.com/KeuqS",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "commitType": "docs",
