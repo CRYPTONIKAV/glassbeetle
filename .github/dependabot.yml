@@ -22,16 +22,31 @@ updates:
       angular:
         patterns:
           - "@angular/*"
+      # Group routine NestJS updates; leave majors ungrouped for individual
+      # review.
       nestjs:
         patterns:
           - "@nestjs/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group routine Tauri JavaScript updates; leave majors ungrouped for
+      # individual review.
       tauri-js:
         patterns:
           - "@tauri-apps/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group routine Vitest updates; leave majors ungrouped for individual
+      # review.
       vitest:
         patterns:
           - "vitest"
           - "@vitest/*"
+        update-types:
+          - "minor"
+          - "patch"
       npm-minor-and-patch:
         patterns:
           - "*"
@@ -58,6 +73,8 @@ updates:
     commit-message:
       prefix: "chore"
     groups:
+      # Group routine Cargo updates; leave majors ungrouped for individual
+      # review.
       cargo-minor-and-patch:
         patterns:
           - "*"
