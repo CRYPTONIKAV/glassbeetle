@@ -1,4 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  afterRenderEffect,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  signal,
+  viewChildren,
+} from '@angular/core';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
@@ -78,7 +86,9 @@ export class CommandPalette {
   private readonly dialogRef = inject<MatDialogRef<CommandPalette, void>>(MatDialogRef);
 
   private readonly queries = new Subject<string>();
+  private readonly options = viewChildren<ElementRef<HTMLElement>>('option');
 
+  protected readonly closed = signal(false);
   protected readonly term = signal('');
   protected readonly searching = signal(false);
   protected readonly results = signal<readonly PaletteItem[]>([]);
@@ -92,6 +102,16 @@ export class CommandPalette {
       : NAVIGATION;
 
     return [...navigation, ...this.results()];
+  });
+
+  /** Only refer to an option while the template actually renders it. */
+  protected readonly activeId = computed(() => {
+    if (this.closed() || (this.searching() && !this.results().length)) {
+      return null;
+    }
+
+    const item = this.items()[this.activeIndex()];
+    return item ? this.optionId(item) : null;
   });
 
   protected readonly groups = computed(() => {
@@ -110,6 +130,20 @@ export class CommandPalette {
   });
 
   constructor() {
+    this.dialogRef
+      .beforeClosed()
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.closed.set(true));
+
+    afterRenderEffect(() => {
+      const id = this.activeId();
+      if (id) {
+        this.options()
+          .find((option) => option.nativeElement.id === id)
+          ?.nativeElement.scrollIntoView({ block: 'nearest' });
+      }
+    });
+
     this.queries
       .pipe(
         map((term) => term.trim()),
@@ -165,6 +199,11 @@ export class CommandPalette {
   /** The flat index of an item, so the template can mark the active row. */
   protected indexOf(item: PaletteItem): number {
     return this.items().indexOf(item);
+  }
+
+  /** Item ids already include their collection (nav, agent, prompt or memory). */
+  protected optionId(item: PaletteItem): string {
+    return `palette-option-${item.id}`;
   }
 
   private search(term: string) {

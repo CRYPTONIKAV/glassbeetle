@@ -5,8 +5,9 @@
       class="palette__input"
       type="text"
       role="combobox"
-      aria-expanded="true"
+      [attr.aria-expanded]="!closed()"
       aria-controls="palette-results"
+      [attr.aria-activedescendant]="activeId()"
       aria-label="Search agents, memory and prompts"
       placeholder="Search agents, memory and prompts…"
       autocomplete="off"
@@ -35,11 +36,13 @@
       </p>
     } @else {
       @for (group of groups(); track group.name) {
-        <div class="palette__group">
-          <p class="palette__group-name">{{ group.name }}</p>
+        <div class="palette__group" role="group" [attr.aria-label]="group.name">
+          <p class="palette__group-name" aria-hidden="true">{{ group.name }}</p>
 
           @for (item of group.items; track item.id) {
-            <button
+            <div
+              #option
+              [id]="optionId(item)"
               class="palette__item"
               role="option"
               [attr.aria-selected]="indexOf(item) === activeIndex()"
@@ -55,7 +58,7 @@
                 }
               </span>
               <mat-icon class="palette__item-go">arrow_forward</mat-icon>
-            </button>
+            </div>
           }
         </div>
       }
