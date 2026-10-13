@@ -28,7 +28,7 @@ The log level is controlled via the `GLASSBEETLE_LOG_LEVEL` environment variable
 | Variable | Values | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `GLASSBEETLE_LOG_LEVEL` | `debug`, `log`, `info`, `warn`, `error` | `log` | Sets the minimum severity level emitted by the logger. |
-| `GLASSBEETLE_LOG_BODY` | `true`, `false`, `1`, `0` | `false` | Enables logging of redacted request bodies (e.g. prompt messages). |
+| `GLASSBEETLE_LOG_BODY` | `true`, `false`, `1`, `0` | `false` | Only `true` or `1` (case-insensitive) enables logging of redacted request bodies (e.g. prompt messages); any other value disables it. |
 
 ## Security & Redaction Rules
 
