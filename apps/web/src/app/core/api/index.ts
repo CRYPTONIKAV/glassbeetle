@@ -3,6 +3,8 @@ export * from './agents.service';
 export * from './api-error';
 export * from './budget.models';
 export * from './budget.service';
+export * from './chats.models';
+export * from './chats.service';
 export * from './health.service';
 export * from './memories.models';
 export * from './memories.service';

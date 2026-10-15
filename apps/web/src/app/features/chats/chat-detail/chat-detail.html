@@ -1,0 +1,206 @@
+<div class="view">
+  @if (loading() && !chat()) {
+    <header class="masthead">
+      <gb-skeleton width="1.75rem" height="1.75rem" radius="6px" />
+      <div class="masthead__skeleton">
+        <gb-skeleton width="14rem" height="1.25rem" />
+        <gb-skeleton width="18rem" height="0.75rem" />
+      </div>
+    </header>
+
+    <gb-panel icon="forum" title="Conversation">
+      <div class="loading">
+        <gb-skeleton width="70%" height="0.8125rem" />
+        <gb-skeleton width="45%" height="0.8125rem" />
+      </div>
+    </gb-panel>
+  } @else if (error(); as failure) {
+    <div class="blank">
+      <mat-icon class="blank__icon">
+        {{ failure.status === 404 ? 'speaker_notes_off' : 'cloud_off' }}
+      </mat-icon>
+      <p class="blank__title">
+        {{ failure.status === 404 ? 'Chat not found' : 'Could not load this chat' }}
+      </p>
+      <p class="blank__text">
+        {{
+          failure.status === 404 ? 'It may have been deleted in another window.' : describe(failure)
+        }}
+      </p>
+      @if (failure.status === 404) {
+        <a matButton="filled" routerLink="/chats">Back to chats</a>
+      } @else {
+        <div class="blank__actions">
+          <a matButton routerLink="/chats">All chats</a>
+          <button matButton="filled" (click)="load(chatId())">
+            <mat-icon>refresh</mat-icon>
+            Try again
+          </button>
+        </div>
+      }
+    </div>
+  } @else if (chat(); as current) {
+    <header class="view__head">
+      <div class="head__text">
+        <h1 class="view__title" [class.unset]="untitled()">{{ heading() }}</h1>
+
+        <p class="view__subtitle">
+          @if (owner(); as ownerRef) {
+            {{ ownerRef.kind === 'agent' ? 'Agent' : 'Team' }}
+            <a class="owner" [routerLink]="ownerLink()">{{ ownerName() }}</a>
+          } @else {
+            <span class="unset">Owner deleted</span>
+          }
+
+          <span class="dot" aria-hidden="true">·</span>
+
+          <time [attr.datetime]="current.createdAt" [title]="current.createdAt">
+            started {{ current.createdAt | relativeTime }}
+          </time>
+
+          <span class="dot" aria-hidden="true">·</span>
+
+          <time [attr.datetime]="current.updatedAt" [title]="current.updatedAt">
+            updated {{ current.updatedAt | relativeTime }}
+          </time>
+        </p>
+      </div>
+
+      <button matIconButton [matMenuTriggerFor]="menu" aria-label="More actions for this chat">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+
+      <mat-menu #menu>
+        <a mat-menu-item routerLink="/chats">
+          <mat-icon>arrow_back</mat-icon>
+          <span>All chats</span>
+        </a>
+        @if (ownerLink(); as link) {
+          <a mat-menu-item [routerLink]="link">
+            <mat-icon>{{ owner()?.kind === 'agent' ? 'graph_3' : 'groups' }}</mat-icon>
+            <span>Open owner</span>
+          </a>
+        }
+        <button mat-menu-item (click)="load(chatId())">
+          <mat-icon>refresh</mat-icon>
+          <span>Reload</span>
+        </button>
+        <button mat-menu-item class="danger" (click)="remove()">
+          <mat-icon>delete</mat-icon>
+          <span>Delete chat</span>
+        </button>
+      </mat-menu>
+    </header>
+
+    <!-- ── Conversation ─────────────────────────────────────────────── -->
+    <gb-panel icon="forum" title="Conversation">
+      <!-- Deliberately not a transcript with a disabled composer: there is no
+           messages endpoint and no completions endpoint, so a message box here
+           would be a control that cannot send anything. The chat itself is
+           real and is kept; what is missing is named. -->
+      <div class="blank blank--compact">
+        <mat-icon class="blank__icon">pending</mat-icon>
+        <p class="blank__title">No messages yet</p>
+        <p class="blank__text">
+          This chat exists and holds its place in the workspace, but the API does not serve
+          conversation turns yet — <span class="mono">GET /chats/:chatId/messages</span> and the
+          completion endpoints are still unimplemented. The transcript and the composer belong here
+          once they are.
+        </p>
+      </div>
+    </gb-panel>
+
+    <!-- ── Summary ──────────────────────────────────────────────────── -->
+    <gb-panel
+      icon="compress"
+      title="Compacted summary"
+      subtitle="Written by compaction, read-only here"
+    >
+      @if (current.contextSummary) {
+        <p class="summary">{{ current.contextSummary }}</p>
+      } @else {
+        <p class="empty">
+          Nothing has been compacted. Once a conversation is long enough to summarise, compaction
+          writes what earlier turns said here — the API keeps this field out of reach of ordinary
+          edits so a summary cannot be rewritten by hand.
+        </p>
+      }
+    </gb-panel>
+
+    <!-- ── Details ──────────────────────────────────────────────────── -->
+    <gb-panel icon="tune" title="Details">
+      <form class="form" [formGroup]="form" (ngSubmit)="save()">
+        <mat-form-field class="form__field">
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" placeholder="Untitled chat" />
+          <mat-hint>Clearing the field leaves the chat untitled.</mat-hint>
+          @if (form.controls.title.hasError('maxlength')) {
+            <mat-error>A title may be at most {{ maxTitleLength }} characters.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="form__actions">
+          <button
+            matButton
+            type="button"
+            [disabled]="saving() || !titleChanged()"
+            (click)="reset()"
+          >
+            Revert
+          </button>
+          <button
+            matButton="filled"
+            type="submit"
+            [disabled]="saving() || form.invalid || !titleChanged()"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+
+      <dl class="facts">
+        <dt>Owner</dt>
+        <dd>
+          @if (owner(); as ownerRef) {
+            <a [routerLink]="ownerLink()">{{ ownerName() }}</a>
+            <span class="facts__note">
+              {{ ownerRef.kind === 'agent' ? 'an agent' : 'a team' }} · cannot be changed, because
+              the history was produced under it
+            </span>
+          } @else {
+            <span class="unset">Deleted</span>
+            <span class="facts__note">
+              the agent or team this chat belonged to is gone; the conversation was kept
+            </span>
+          }
+        </dd>
+
+        <dt>Project</dt>
+        <dd>
+          @if (current.projectId) {
+            <span class="mono">{{ current.projectId }}</span>
+            <button
+              matButton
+              class="facts__action"
+              type="button"
+              [disabled]="saving()"
+              (click)="detachProject()"
+            >
+              Remove from project
+            </button>
+          } @else {
+            <span class="unset">Not in a project</span>
+            <span class="facts__note">
+              projects have no endpoints yet, so there is nothing to assign this to
+            </span>
+          }
+        </dd>
+
+        <dt>Identifier</dt>
+        <dd>
+          <span class="mono">{{ current.id }}</span>
+        </dd>
+      </dl>
+    </gb-panel>
+  }
+</div>

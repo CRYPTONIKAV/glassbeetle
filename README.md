@@ -100,16 +100,18 @@ configured to draw on.
 
 It covers the endpoints the API implements — the user's own profile, the
 spending budget, agents (profile picture and private memories included),
-teams and their rosters, shared memory, system prompts and service health.
-The modules that are still empty controllers have no screens.
+teams and their rosters, chats, shared memory, system prompts and service
+health. The modules that are still empty controllers have no screens.
 
 Where the schema promises more than the API serves, the UI says so rather than
 mocking it: agents show configuration *readiness* rather than an invented run
 state, the feed is labelled as configuration history, the spending screen
 states that nothing writes `usage_events` yet rather than presenting an
-untouched budget as a measurement, and model assignment is disabled with its
-reason stated because `agents.model_id` references a `models` table that has no
-endpoint to populate it.
+untouched budget as a measurement, the chat surface manages conversations and
+says where the transcript will go rather than drawing a composer that has no
+endpoint to send to, and model assignment is disabled with its reason stated
+because `agents.model_id` references a `models` table that has no endpoint to
+populate it.
 
 Structure, conventions and the capability probe that drives that last point are
 documented in [`apps/web/README.md`](apps/web/README.md). Read it before adding

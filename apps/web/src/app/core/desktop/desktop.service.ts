@@ -26,6 +26,7 @@ export type ShellAction =
   | 'go-overview'
   | 'go-agents'
   | 'go-teams'
+  | 'go-chats'
   | 'go-memory'
   | 'go-prompts'
   | 'search'

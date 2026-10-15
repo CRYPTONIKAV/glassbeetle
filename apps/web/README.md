@@ -12,9 +12,12 @@ npm run build -w @glassbeetle/web
 
 ## What the UI covers
 
-The UI shows only what the API implements. Chats, projects, providers,
-artifacts, analytics and backups exist as NestJS modules with empty
-controllers, so their routes 404 and they have no screens.
+The UI shows only what the API implements. Projects, providers, artifacts,
+analytics and backups exist as NestJS modules with empty controllers, so their
+routes 404 and they have no screens. Chats are half-served: the chat itself has
+CRUD endpoints, while `/chats/:chatId/messages` and the completion endpoints are
+still empty — so there is a chat surface, and it manages conversations without
+showing one.
 
 | Surface | Endpoints |
 | --- | --- |
@@ -26,13 +29,15 @@ controllers, so their routes 404 and they have no screens.
 | Agents · memory | `/agents/:agentId/memories` |
 | Teams · directory | `/teams` |
 | Teams · roster | `/teams/:teamId`, `/teams/:teamId/members` |
+| Chats · directory | `/chats` |
+| Chats · conversation | `/chats/:chatId` |
 | Shared memory | `/memories` |
 | System prompts | `/system-prompts` |
 
 ## What the UI does *not* invent
 
 The schema in `data/` describes a product with chats, teams, tool calls,
-artifacts and usage events. Almost none of that has endpoints yet. Four places
+artifacts and usage events. Almost none of that has endpoints yet. Five places
 where it would have been easy to mock something, and what is shown instead:
 
 **Agent state is readiness, not activity.** There is no inference or chat
@@ -52,6 +57,13 @@ would write those rows, and it is an empty class, so every installation reads
 zero. The screen says so in as many words instead of presenting a full budget
 as a measurement, and the deck's meter draws no value ring until there is a
 limit to measure against.
+
+**A chat has no transcript and no composer.** `GET /chats/:chatId/messages`
+and the completion endpoints are empty controllers, so there are no turns to
+show and nothing to send one to. The chat page says that where the transcript
+will go, and keeps what the API does serve: the title, the owner, the project
+and the compacted summary. A message box disabled with a tooltip would be the
+same information in the shape of a control that does not work.
 
 **The agent's Context tab is not a rendered prompt.** No endpoint composes one.
 The tab shows the configured layers — system prompt, personality, instructions,
@@ -201,6 +213,15 @@ renumbered server-side on every add, remove and reorder, and guessing the
 result here would be a second implementation of the same rule. Agent names come
 from the roster the shell already holds; the API returns ids, so there is one
 source for a name and the rail and the team page cannot disagree.
+
+**Chat ownership.** A chat belongs to exactly one agent or one team, and the
+API refuses to move it afterwards — the history was produced under that owner.
+So the owner is asked for when the chat is created and shown as a fact, not a
+field, on its page. The chat list filters by owner rather than by text because
+`GET /chats` takes no `search` parameter and the API rejects query parameters it
+does not know: a search box there would be a control that cannot work. Both
+owner columns are nullable, since deleting an agent or a team keeps its chats,
+so "owner deleted" is a state the list renders and can filter for.
 
 **Avatars.** One component, `gb-avatar`, draws a stored picture when there is
 one and initials when there is not — with the hue derived from the name, so a

@@ -100,8 +100,9 @@ export class App implements OnInit {
     { path: '/overview', label: 'Overview', icon: 'space_dashboard', shortcut: '1' },
     { path: '/agents', label: 'Agents', icon: 'graph_3', shortcut: '2' },
     { path: '/teams', label: 'Teams', icon: 'groups', shortcut: '3' },
-    { path: '/memory', label: 'Shared memory', icon: 'database', shortcut: '4' },
-    { path: '/prompts', label: 'System prompts', icon: 'article', shortcut: '5' },
+    { path: '/chats', label: 'Chats', icon: 'forum', shortcut: '4' },
+    { path: '/memory', label: 'Shared memory', icon: 'database', shortcut: '5' },
+    { path: '/prompts', label: 'System prompts', icon: 'article', shortcut: '6' },
   ];
 
   /**
@@ -187,6 +188,11 @@ export class App implements OnInit {
     // thing you are looking at rather than inventing a name it cannot know.
     if (segments[0] === 'teams') {
       return [head, { label: 'Team', path: url }];
+    }
+
+    // The same for a chat, which may not have a title at all.
+    if (segments[0] === 'chats') {
+      return [head, { label: 'Chat', path: url }];
     }
 
     return [head];
@@ -281,6 +287,9 @@ export class App implements OnInit {
       case 'go-teams':
         void this.router.navigate(['/teams']);
         break;
+      case 'go-chats':
+        void this.router.navigate(['/chats']);
+        break;
       case 'go-memory':
         void this.router.navigate(['/memory']);
         break;
@@ -373,8 +382,10 @@ export class App implements OnInit {
       case '3':
         return 'go-teams';
       case '4':
-        return 'go-memory';
+        return 'go-chats';
       case '5':
+        return 'go-memory';
+      case '6':
         return 'go-prompts';
       default:
         return null;
