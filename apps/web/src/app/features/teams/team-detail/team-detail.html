@@ -36,6 +36,10 @@
           <mat-icon>arrow_back</mat-icon>
           <span>All teams</span>
         </a>
+        <a mat-menu-item routerLink="/chats" [queryParams]="{ teamId: current.id }">
+          <mat-icon>forum</mat-icon>
+          <span>Chats</span>
+        </a>
         <button mat-menu-item class="danger" (click)="removeTeam()">
           <mat-icon>delete</mat-icon>
           <span>Delete team</span>

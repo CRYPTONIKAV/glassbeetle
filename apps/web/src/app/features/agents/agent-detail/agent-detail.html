@@ -83,6 +83,10 @@
         </button>
 
         <mat-menu #menu>
+          <a mat-menu-item routerLink="/chats" [queryParams]="{ agentId: current.id }">
+            <mat-icon>forum</mat-icon>
+            <span>Chats</span>
+          </a>
           <button
             mat-menu-item
             [disabled]="!current.hasPicture || uploading()"

@@ -28,6 +28,17 @@ export const routes: Routes = [
       import('./features/agents/agent-detail/agent-detail').then((m) => m.AgentDetail),
   },
   {
+    path: 'chats',
+    title: 'Chats · Glassbeetle',
+    loadComponent: () => import('./features/chats/chat-list/chat-list').then((m) => m.ChatList),
+  },
+  {
+    path: 'chats/:chatId',
+    title: 'Chat · Glassbeetle',
+    loadComponent: () =>
+      import('./features/chats/chat-detail/chat-detail').then((m) => m.ChatDetail),
+  },
+  {
     path: 'budget',
     title: 'Spending · Glassbeetle',
     loadComponent: () => import('./features/budget/budget').then((m) => m.Budget),

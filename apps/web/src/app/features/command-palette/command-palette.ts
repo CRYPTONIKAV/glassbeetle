@@ -47,6 +47,14 @@ const NAVIGATION: readonly PaletteItem[] = [
     link: ['/agents'],
   },
   {
+    id: 'nav:chats',
+    icon: 'forum',
+    label: 'Chats',
+    hint: 'Conversations with agents and teams',
+    group: 'Go to',
+    link: ['/chats'],
+  },
+  {
     id: 'nav:memory',
     icon: 'database',
     label: 'Shared memory',
