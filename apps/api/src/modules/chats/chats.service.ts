@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -24,6 +25,7 @@ import {
   type ChatRow,
 } from './dto/chat.mapper.js';
 import type { CreateChatDto } from './dto/create-chat.dto.js';
+import type { DeleteAllChatsResponseDto } from './dto/delete-all-chats-response.dto.js';
 import type { ListChatsQueryDto } from './dto/list-chats-query.dto.js';
 import type { UpdateChatDto } from './dto/update-chat.dto.js';
 
@@ -40,6 +42,8 @@ export const ALLOWED_CHAT_SORT_COLUMNS: Readonly<Record<string, string>> = {
 
 @Injectable()
 export class ChatsService {
+  private readonly logger = new Logger(ChatsService.name);
+
   constructor(private readonly db: DatabaseService) {}
 
   /**
@@ -311,6 +315,50 @@ export class ChatsService {
         message: `Chat with ID "${chatId}" not found`,
       });
     }
+  }
+
+  /**
+   * Permanently and irreversibly deletes all chats and their conversation history.
+   *
+   * This is an untargeted, irreversible operation that destroys all rows in `chats`,
+   * which cascades to `messages` (ON DELETE CASCADE) so every message in the entire
+   * database is deleted.
+   *
+   * Cascade and preservation behaviour:
+   * - `messages` (`chat_id REFERENCES chats(id) ON DELETE CASCADE`):
+   *   The entire conversation history across all chats is permanently destroyed.
+   * - `artifacts` (`chat_id REFERENCES chats(id) ON DELETE SET NULL`):
+   *   Artifacts survive with their `chat_id` set to null (work products are kept).
+   * - `usage_events` (`chat_id REFERENCES chats(id) ON DELETE SET NULL`):
+   *   Usage events survive with attribution unlinked, preserving historical spend and token totals.
+   * - Agents, teams, projects, and memories are completely untouched.
+   *
+   * Counts of deleted chats and cascaded messages are captured inside the transaction
+   * and logged at application level. Clearing an empty table returns `{ deletedChats: 0, deletedMessages: 0 }`.
+   */
+  async removeAll(): Promise<DeleteAllChatsResponseDto> {
+    return this.db.transaction(() => {
+      const chatCountRow = this.db.get<{ total: number }>(
+        'SELECT COUNT(*) AS total FROM chats',
+      );
+      const messageCountRow = this.db.get<{ total: number }>(
+        'SELECT COUNT(*) AS total FROM messages',
+      );
+
+      const deletedChats = chatCountRow?.total ?? 0;
+      const deletedMessages = messageCountRow?.total ?? 0;
+
+      this.db.run('DELETE FROM chats');
+
+      this.logger.log(
+        `Deleted ${deletedChats} chats and ${deletedMessages} cascaded messages in bulk`,
+      );
+
+      return {
+        deletedChats,
+        deletedMessages,
+      };
+    });
   }
 
   /**

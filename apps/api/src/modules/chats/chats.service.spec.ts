@@ -615,4 +615,87 @@ describe('ChatsService', () => {
       expect(survivingArtifact?.chat_id).toBeNull();
     });
   });
+
+  describe('removeAll (bulk deletion)', () => {
+    it('returns deletedChats: 0 and deletedMessages: 0 on empty database', async () => {
+      const result = await service.removeAll();
+      expect(result).toEqual({
+        deletedChats: 0,
+        deletedMessages: 0,
+      });
+    });
+
+    it('permanently deletes all chats and cascaded messages, returning exact counts', async () => {
+      const agent = fixtures.createAgent({ name: 'Alice' });
+      const team = fixtures.createTeam({ name: 'Dev Team' });
+      const project = fixtures.createProject({ name: 'Alpha' });
+
+      // Create 3 chats with multiple messages
+      const chat1 = fixtures.createChat({ agent_id: agent.id, project_id: project.id });
+      const chat2 = fixtures.createChat({ agent_id: agent.id });
+      const chat3 = fixtures.createChat({ team_id: team.id, agent_id: null });
+
+      fixtures.createMessage({ chat_id: chat1.id, sequence: 1 });
+      fixtures.createMessage({ chat_id: chat1.id, sequence: 2 });
+      fixtures.createMessage({ chat_id: chat2.id, sequence: 1 });
+      fixtures.createMessage({ chat_id: chat3.id, sequence: 1 });
+      fixtures.createMessage({ chat_id: chat3.id, sequence: 2 });
+      fixtures.createMessage({ chat_id: chat3.id, sequence: 3 });
+
+      // Create linked artifact and usage event
+      const artifact = fixtures.createArtifact({
+        chat_id: chat1.id,
+        title: 'Design Spec',
+      });
+      const usageEvent = fixtures.createUsageEvent({
+        chat_id: chat1.id,
+        agent_id: agent.id,
+      });
+
+      // Also create a private memory and a shared memory
+      fixtures.createAgentMemory({ agent_id: agent.id, content: 'Agent memory' });
+      fixtures.createSharedMemory({ content: 'Shared memory' });
+
+      // Pre-assert counts
+      expect(db.all('SELECT * FROM chats')).toHaveLength(3);
+      expect(db.all('SELECT * FROM messages')).toHaveLength(6);
+
+      // Perform bulk delete
+      const result = await service.removeAll();
+
+      // Assert counts returned
+      expect(result).toEqual({
+        deletedChats: 3,
+        deletedMessages: 6,
+      });
+
+      // Assert all chats and messages are gone
+      expect(db.all('SELECT * FROM chats')).toHaveLength(0);
+      expect(db.all('SELECT * FROM messages')).toHaveLength(0);
+
+      // Assert artifact survived with chat_id = NULL (ON DELETE SET NULL)
+      const survivingArtifact = db.get<{ chat_id: string | null }>(
+        'SELECT chat_id FROM artifacts WHERE id = ?',
+        [artifact.id],
+      );
+      expect(survivingArtifact).toBeDefined();
+      expect(survivingArtifact?.chat_id).toBeNull();
+
+      // Assert usage event survived with chat_id = NULL (ON DELETE SET NULL)
+      const survivingUsageEvent = db.get<{ chat_id: string | null; agent_id: string }>(
+        'SELECT chat_id, agent_id FROM usage_events WHERE id = ?',
+        [usageEvent.id],
+      );
+      expect(survivingUsageEvent).toBeDefined();
+      expect(survivingUsageEvent?.chat_id).toBeNull();
+      expect(survivingUsageEvent?.agent_id).toBe(agent.id);
+
+      // Assert agents, teams, projects, and memories are completely untouched
+      expect(db.all('SELECT * FROM agents')).toHaveLength(1);
+      expect(db.all('SELECT * FROM teams')).toHaveLength(1);
+      expect(db.all('SELECT * FROM projects')).toHaveLength(1);
+      expect(db.all('SELECT * FROM agent_memories')).toHaveLength(1);
+      expect(db.all('SELECT * FROM shared_memories')).toHaveLength(1);
+    });
+  });
 });
