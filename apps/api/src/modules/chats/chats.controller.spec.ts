@@ -37,6 +37,9 @@ describe('ChatsController', () => {
             create: vi.fn().mockResolvedValue(CHAT),
             update: vi.fn().mockResolvedValue(CHAT),
             delete: vi.fn().mockResolvedValue(undefined),
+            removeAll: vi
+              .fn()
+              .mockResolvedValue({ deletedChats: 5, deletedMessages: 20 }),
           },
         },
       ],
@@ -102,5 +105,11 @@ describe('ChatsController', () => {
   it('delegates delete by chatId', async () => {
     await expect(controller.delete(CHAT.id)).resolves.toBeUndefined();
     expect(service.delete).toHaveBeenCalledWith(CHAT.id);
+  });
+
+  it('delegates removeAll (delete all chats)', async () => {
+    const result = await controller.removeAll({ confirm: 'true' });
+    expect(result).toEqual({ deletedChats: 5, deletedMessages: 20 });
+    expect(service.removeAll).toHaveBeenCalled();
   });
 });
