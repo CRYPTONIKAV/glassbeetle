@@ -372,4 +372,146 @@ describe('Chats endpoints (e2e)', () => {
       expect(survivingArtifact?.chat_id).toBeNull();
     });
   });
+
+  describe('Bulk deletion (DELETE /api/v1/chats)', () => {
+    it('asserts foreign-key enforcement is enabled (PRAGMA foreign_keys = ON)', () => {
+      const row = testApp.db.get<{ foreign_keys: number }>(
+        'PRAGMA foreign_keys',
+      );
+      expect(row?.foreign_keys).toBe(1);
+    });
+
+    it('rejects bulk deletion when confirm parameter is omitted and deletes nothing', async () => {
+      const agent = createAgent();
+      await createChat({ agentId: agent.id, title: 'Chat to protect' });
+
+      const response = await testApp
+        .request()
+        .delete('/api/v1/chats')
+        .expect(400);
+
+      expect(JSON.stringify(response.body)).toContain(
+        'confirm query parameter is required',
+      );
+
+      const rows = testApp.db.all('SELECT * FROM chats');
+      expect(rows).toHaveLength(1);
+    });
+
+    it('rejects bulk deletion when confirm parameter is not "true" and deletes nothing', async () => {
+      const agent = createAgent();
+      await createChat({ agentId: agent.id, title: 'Chat to protect' });
+
+      for (const invalidValue of ['false', 'no', '0', '1', 'TRUE']) {
+        const response = await testApp
+          .request()
+          .delete(`/api/v1/chats?confirm=${invalidValue}`)
+          .expect(400);
+
+        expect(response.body.details).toContain(
+          'confirm must be "true" to authorize irreversible deletion',
+        );
+      }
+
+      const rows = testApp.db.all('SELECT * FROM chats');
+      expect(rows).toHaveLength(1);
+    });
+
+    it('returns success with counts of 0 when deleting from an empty database', async () => {
+      const response = await testApp
+        .request()
+        .delete('/api/v1/chats?confirm=true')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        deletedChats: 0,
+        deletedMessages: 0,
+      });
+    });
+
+    it('destroys all chats and messages, preserves artifacts and usage_events with null chatId, and leaves other entities untouched', async () => {
+      const agent = createAgent('Owner Agent');
+      const team = createTeam('Owner Team');
+      const project = createProject('Related Project');
+      testApp.fixtures.createAgentMemory({
+        agent_id: agent.id,
+        content: 'Agent memory',
+      });
+      testApp.fixtures.createSharedMemory({ content: 'Shared memory' });
+
+      // Create chats
+      const chat1 = await createChat({
+        agentId: agent.id,
+        projectId: project.id,
+        title: 'Chat 1',
+      });
+      const chat2 = await createChat({ agentId: agent.id, title: 'Chat 2' });
+      const chat3 = await createChat({ teamId: team.id, title: 'Chat 3' });
+
+      // Create messages across the chats
+      testApp.fixtures.createMessage({ chat_id: chat1.id, sequence: 1 });
+      testApp.fixtures.createMessage({ chat_id: chat1.id, sequence: 2 });
+      testApp.fixtures.createMessage({ chat_id: chat2.id, sequence: 1 });
+      testApp.fixtures.createMessage({ chat_id: chat3.id, sequence: 1 });
+      testApp.fixtures.createMessage({ chat_id: chat3.id, sequence: 2 });
+      testApp.fixtures.createMessage({ chat_id: chat3.id, sequence: 3 });
+
+      // Create artifact linked to chat1
+      const artifact = testApp.fixtures.createArtifact({
+        chat_id: chat1.id,
+        title: 'Project Brief',
+      });
+
+      // Create usage event linked to chat1
+      const usageEvent = testApp.fixtures.createUsageEvent({
+        chat_id: chat1.id,
+        agent_id: agent.id,
+      });
+
+      // Assert pre-state
+      expect(testApp.db.all('SELECT * FROM chats')).toHaveLength(3);
+      expect(testApp.db.all('SELECT * FROM messages')).toHaveLength(6);
+
+      // Perform bulk deletion
+      const response = await testApp
+        .request()
+        .delete('/api/v1/chats?confirm=true')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        deletedChats: 3,
+        deletedMessages: 6,
+      });
+
+      // Verify all chats and messages are gone
+      expect(testApp.db.all('SELECT * FROM chats')).toHaveLength(0);
+      expect(testApp.db.all('SELECT * FROM messages')).toHaveLength(0);
+
+      // Verify artifact survived with chat_id set to null (ON DELETE SET NULL)
+      const survivingArtifact = testApp.db.get<{ chat_id: string | null }>(
+        'SELECT chat_id FROM artifacts WHERE id = ?',
+        [artifact.id],
+      );
+      expect(survivingArtifact).toBeDefined();
+      expect(survivingArtifact?.chat_id).toBeNull();
+
+      // Verify usage event survived with chat_id set to null (ON DELETE SET NULL)
+      const survivingUsageEvent = testApp.db.get<{
+        chat_id: string | null;
+        agent_id: string;
+      }>('SELECT chat_id, agent_id FROM usage_events WHERE id = ?', [
+        usageEvent.id,
+      ]);
+      expect(survivingUsageEvent).toBeDefined();
+      expect(survivingUsageEvent?.chat_id).toBeNull();
+      expect(survivingUsageEvent?.agent_id).toBe(agent.id);
+
+      // Verify unrelated entities are completely untouched
+      expect(testApp.db.all('SELECT * FROM agents')).toHaveLength(1);
+      expect(testApp.db.all('SELECT * FROM teams')).toHaveLength(1);
+      expect(testApp.db.all('SELECT * FROM projects')).toHaveLength(1);
+      expect(testApp.db.all('SELECT * FROM agent_memories')).toHaveLength(1);
+      expect(testApp.db.all('SELECT * FROM shared_memories')).toHaveLength(1);
+    });
+  });
 });
