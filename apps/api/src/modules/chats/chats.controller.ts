@@ -30,6 +30,8 @@ import { ChatsService } from './chats.service.js';
 import {
   ChatResponseDto,
   CreateChatDto,
+  DeleteAllChatsQueryDto,
+  DeleteAllChatsResponseDto,
   ListChatsQueryDto,
   PaginatedChatsResponseDto,
   UpdateChatDto,
@@ -207,6 +209,44 @@ Owner rule:
     @Body() dto: UpdateChatDto,
   ): Promise<ChatResponseDto> {
     return this.chatsService.update(chatId, dto);
+  }
+
+  @Delete()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Delete all chats',
+    description: `Permanently and irreversibly deletes every chat and destroys all conversation history.
+
+This is an untargeted, irreversible operation. To protect against accidental deletion or unauthenticated cross-site requests, callers must explicitly supply the \`?confirm=true\` query parameter.
+
+Cascade behaviour:
+- \`messages\` (\`chat_id NOT NULL REFERENCES chats(id) ON DELETE CASCADE\`): Every message in all chats is permanently destroyed.
+- \`artifacts\` (\`chat_id REFERENCES chats(id) ON DELETE SET NULL\`): Artifacts survive with their \`chatId\` set to null.
+- \`usage_events\` (\`chat_id REFERENCES chats(id) ON DELETE SET NULL\`): Usage telemetry survives with attribution unlinked, keeping historical usage totals intact.
+- Agents, teams, projects, and memories are completely untouched.`,
+  })
+  @ApiQuery({
+    name: 'confirm',
+    description:
+      'Safety confirmation parameter. Must be set to "true" to authorize irreversible deletion.',
+    required: true,
+    type: String,
+    example: 'true',
+  })
+  @ApiOkResponse({
+    description:
+      'All chats successfully deleted, returning counts of deleted chats and messages',
+    type: DeleteAllChatsResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Missing or invalid confirmation parameter (?confirm=true required)',
+    type: ApiErrorResponseDto,
+  })
+  async removeAll(
+    @Query() _query: DeleteAllChatsQueryDto,
+  ): Promise<DeleteAllChatsResponseDto> {
+    return this.chatsService.removeAll();
   }
 
   @Delete(':chatId')
