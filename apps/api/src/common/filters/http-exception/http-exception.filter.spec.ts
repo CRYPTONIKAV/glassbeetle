@@ -113,6 +113,19 @@ describe('HttpExceptionFilter', () => {
     expect(captured.body.message).toBe('Agent has no model');
   });
 
+  it('turns an over-limit body into a 413, not a 500', () => {
+    const { host, captured } = createHost();
+    const tooLarge = Object.assign(new Error('request entity too large'), {
+      status: 413,
+      type: 'entity.too.large',
+    });
+
+    filter.catch(tooLarge, host);
+
+    expect(captured.status).toBe(HttpStatus.PAYLOAD_TOO_LARGE);
+    expect(captured.body.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
   it('turns an unexpected error into a sanitised 500', () => {
     const { host, captured } = createHost();
 

@@ -95,11 +95,22 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const timestamp = nowIso();
 
     if (!(exception instanceof HttpException)) {
+      // Body-parser rejections (e.g. over the JSON size limit) never reach a
+      // controller: without this branch they would surface as 500s. A body
+      // the client cannot shrink by retrying is a 413 with the envelope.
+      const status =
+        typeof (exception as { status?: unknown }).status === 'number' &&
+        (exception as { status?: number }).status === HttpStatus.PAYLOAD_TOO_LARGE
+          ? HttpStatus.PAYLOAD_TOO_LARGE
+          : HttpStatus.INTERNAL_SERVER_ERROR;
       return {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: titleForStatus(HttpStatus.INTERNAL_SERVER_ERROR),
-        code: codeForStatus(HttpStatus.INTERNAL_SERVER_ERROR),
-        message: INTERNAL_ERROR_MESSAGE,
+        statusCode: status,
+        error: titleForStatus(status),
+        code: codeForStatus(status),
+        message:
+          status === HttpStatus.PAYLOAD_TOO_LARGE
+            ? 'Request body too large'
+            : INTERNAL_ERROR_MESSAGE,
         path,
         timestamp,
       };

@@ -4,6 +4,7 @@ import {
   type INestApplication,
 } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
+import { json } from 'express';
 import { HttpExceptionFilter } from './common/filters/http-exception/http-exception.filter.js';
 import type { ApiErrorResponse } from './common/http/api-error.js';
 import { nowIso } from './common/persistence/timestamps.js';
@@ -31,6 +32,12 @@ export function configureApp(app: INestApplication): INestApplication {
   const config = app.get(AppConfigService);
 
   app.setGlobalPrefix(GLOBAL_PREFIX);
+
+  // The memory DTOs allow 100 000 characters of text, which is up to 400 KiB
+  // of UTF-8: the Express default of 100 KiB would reject legitimate payloads
+  // long before validation runs. Parsing happens before routing, so an
+  // over-limit body still reaches the 413 branch of the exception filter.
+  app.use(json({ limit: '1mb' }));
 
   // URI versioning puts the version after the global prefix (`/api/v1/agents`)
   // and lets an individual controller opt out or pin a version later, which a
