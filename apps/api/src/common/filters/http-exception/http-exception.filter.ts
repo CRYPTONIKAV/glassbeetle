@@ -99,8 +99,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       // controller: without this branch they would surface as 500s. A body
       // the client cannot shrink by retrying is a 413 with the envelope.
       const status =
-        typeof (exception as { status?: unknown }).status === 'number' &&
-        (exception as { status?: number }).status === HttpStatus.PAYLOAD_TOO_LARGE
+        (typeof exception === 'object' || typeof exception === 'function') &&
+        exception !== null &&
+        (exception as { status?: unknown }).status ===
+          HttpStatus.PAYLOAD_TOO_LARGE
           ? HttpStatus.PAYLOAD_TOO_LARGE
           : HttpStatus.INTERNAL_SERVER_ERROR;
       return {
